@@ -9,13 +9,14 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
+//import org.springframework.web.reactive.function.client.WebClient;
 
 import co.edu.eafit.bank.domain.Account;
 import co.edu.eafit.bank.domain.Transaction;
 import co.edu.eafit.bank.domain.TransactionType;
 import co.edu.eafit.bank.domain.Users;
 import co.edu.eafit.bank.dto.DepositDTO;
+import co.edu.eafit.bank.dto.OTPValidationRequest;
 import co.edu.eafit.bank.dto.OTPValidationResponse;
 import co.edu.eafit.bank.dto.TransactionResultDTO;
 import co.edu.eafit.bank.dto.TransferDTO;
@@ -25,6 +26,7 @@ import co.edu.eafit.bank.entityservice.TransactionService;
 import co.edu.eafit.bank.entityservice.TransactionTypeService;
 import co.edu.eafit.bank.entityservice.UsersService;
 import co.edu.eafit.bank.exception.ZMessManager;
+import co.edu.eafit.bank.openfeignclients.OTPServiceClient;
 import reactor.core.publisher.Mono;
 
 
@@ -48,13 +50,16 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 	
 	
 	//Solicitando al proyecto un WebClient
-	@Autowired
-	WebClient otpClient;
+	//@Autowired
+	//WebClient otpClient;
 	
 	
 	//Acceder a la propiedad configurada del proyecto
-	@Value("${otp.service.validate.url}")
-	private String otpServiceValidationUrl;
+	//@Value("${otp.service.validate.url}")
+	//private String otpServiceValidationUrl;
+	
+	@Autowired
+	OTPServiceClient otpServiceClient;
 
 	@Override
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
@@ -94,6 +99,14 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 
 		Users user = userOptional.get();
 		
+		//Se valida el token contra el servicio
+		OTPValidationResponse otpValidationResponse =
+				validateToken(user.getUserEmail(), transferDTO.getToken());
+		
+		if(otpValidationResponse ==null|| !otpValidationResponse.getValid()){
+			throw new Exception("Not valid OTP");
+		}
+		
 		//Validar el OTP
 		
 
@@ -112,24 +125,11 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 	}
 	
 	
-	private OTPValidationResponse validateToken(String user, String otp) {
+	private OTPValidationResponse validateToken(String user, String otp) throws Exception {
 		
-		String jsonBody = "{"
-				+ " \"user\": \""+user+"\","
-				+ " \"otp\": \""+otp+"\" "
-				+ "}";
-		
-		Mono<OTPValidationResponse> monoResponse = otpClient.post()
-			.header("Content-Type", "application/json")
-			.bodyValue(jsonBody)
-			.retrieve()
-			.bodyToMono(OTPValidationResponse.class);
-		
-		OTPValidationResponse otpValidationResponse = monoResponse.block();
-		
-		return otpValidationResponse;
+		OTPValidationRequest otpValidationRequest = new OTPValidationRequest(user,otp);
+		return otpServiceClient.validateOTP(otpValidationRequest);
 	}
-
 
 
 	@Override
