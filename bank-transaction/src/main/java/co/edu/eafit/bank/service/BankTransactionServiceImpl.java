@@ -54,8 +54,11 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 	//@Autowired
 	//OTPServiceClient otpServiceClient;
 
+	//@Autowired
+	//FeignClients feignClients;
+	
 	@Autowired
-	FeignClients feignClients;
+	OTPServiceCircuitBreaker otpServiceCircuitBreaker;
 	
 	@Override
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
@@ -139,9 +142,7 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 
 	private OTPValidationResponse validateToken(String user, String otp) throws Exception {
 
-		OTPValidationRequest otpValidationRequest = new OTPValidationRequest(user, otp);
-		// return otpServiceClient.validateOTP(otpValidationRequest);
-		return feignClients.validateOTP(otpValidationRequest);
+		return otpServiceCircuitBreaker.validateToken(user, otp);
 		
 	}
 
