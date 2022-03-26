@@ -13,6 +13,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
 		
+		
 		//Todas las solicitudes deben venir autenticadas
 		http.authorizeExchange(exchange -> exchange.pathMatchers("/*/actuator/**").permitAll(). anyExchange().authenticated())
 			.oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::jwt);

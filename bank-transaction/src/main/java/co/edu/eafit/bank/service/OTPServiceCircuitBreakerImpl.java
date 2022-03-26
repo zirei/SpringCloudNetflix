@@ -17,18 +17,17 @@ public class OTPServiceCircuitBreakerImpl implements OTPServiceCircuitBreaker {
 	@Override
 	@CircuitBreaker(
 			name = "bank-otp",
-			fallbackMethod = "fallbackValidateToken"
+			fallbackMethod = "fallbackValidateOTP"
 			)
-	public OTPValidationResponse validateToken(String user, String otp) throws Exception {
-		
+	public OTPValidationResponse validateOTP(String user, String otp) throws Exception {
+		// Using OpenFeign
 		OTPValidationRequest otpValidationRequest = new OTPValidationRequest(user, otp);
-		
 		return feignClients.validateOTP(otpValidationRequest);
-		
 	}
 	
-	public OTPValidationResponse fallbackValidateToken(String user, String otp, Throwable e) throws Exception {
-		throw new Exception("Lo siento, el servicio de OTP no se encuentra disponible");
+	public OTPValidationResponse fallbackValidateOTP(String user, String otp, Throwable th) throws Exception {
+		throw new Exception("OTPService is not available");
 	}
 
 }
+

@@ -4,6 +4,7 @@ import co.edu.eafit.bank.dto.OTPValidationResponse;
 
 public interface OTPServiceCircuitBreaker {
 
-	public OTPValidationResponse validateToken(String user, String otp) throws Exception;
+	public OTPValidationResponse validateOTP(String user, String otp) throws Exception;
 	
 }
+

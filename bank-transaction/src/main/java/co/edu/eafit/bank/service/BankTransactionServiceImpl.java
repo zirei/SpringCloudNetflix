@@ -27,7 +27,7 @@ import co.edu.eafit.bank.entityservice.UsersService;
 import co.edu.eafit.bank.exception.ZMessManager;
 import co.edu.eafit.bank.openfeignclients.FeignClients;
 //import co.edu.eafit.bank.openfeignclients.OTPServiceClient;
-import reactor.core.publisher.Mono;
+//import reactor.core.publisher.Mono;
 
 
 @Service
@@ -51,15 +51,16 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 //	@Autowired
 //	WebClient otpWebClient;
 	
-	//@Autowired
-	//OTPServiceClient otpServiceClient;
-
-	//@Autowired
-	//FeignClients feignClients;
+//	@Autowired
+//	OTPServiceClient otpServiceClient;
+	
+//	@Autowired
+//	FeignClients feignClients;
 	
 	@Autowired
 	OTPServiceCircuitBreaker otpServiceCircuitBreaker;
-	
+
+
 	@Override
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
 	public TransactionResultDTO transfer(TransferDTO transferDTO) throws Exception {
@@ -99,8 +100,14 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 		Users user = userOptional.get();
 		
 		//Se valida el token contra el servicio		
-		OTPValidationResponse otpValidationResponse = 
-				validateToken(user.getUserEmail(), transferDTO.getToken());
+//		OTPValidationResponse otpValidationResponse = 
+//				validateToken(user.getUserEmail(), transferDTO.getToken());
+		
+		OTPValidationResponse otpValidationResponse = otpServiceCircuitBreaker.validateOTP(
+				transferDTO.getUserEmail(), 
+				transferDTO.getToken()
+			);
+
 
 		if (otpValidationResponse == null || !otpValidationResponse.getValid()) {
 			throw new Exception("Not valid OTP");
@@ -140,11 +147,13 @@ public class BankTransactionServiceImpl implements BankTransactionService {
 //	}
 	
 
-	private OTPValidationResponse validateToken(String user, String otp) throws Exception {
-
-		return otpServiceCircuitBreaker.validateToken(user, otp);
-		
-	}
+//	private OTPValidationResponse validateToken(String user, String otp) throws Exception {
+//
+//		OTPValidationRequest otpValidationRequest = new OTPValidationRequest(user, otp);
+//		//return otpServiceClient.validateOTP(otpValidationRequest);
+//		return feignClients.validateOTP(otpValidationRequest);
+//
+//	}
 
 	@Override
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED, rollbackFor = Exception.class)

@@ -18,4 +18,6 @@ public interface FeignClients {
 	public OTPValidationResponse validateOTP(
 			@Valid @RequestBody
 			OTPValidationRequest otpValidationRequest);
+	
 }
+
